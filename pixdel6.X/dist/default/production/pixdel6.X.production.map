@@ -1,14 +1,16 @@
 MPLINK 5.08, LINKER
-Linker Map File - Created Tue Sep 20 21:39:43 2016
+Linker Map File - Created Wed Sep 21 13:05:22 2016
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
                 ---------  ---------  ---------  ---------  ---------
                    .org_0       code   0x000000    program   0x000002
                    .cinit    romdata   0x000001    program   0x000004
-                   .org_1       code   0x000004    program   0x000022
+                   .org_1       code   0x000004    program   0x00013c
 .config_8007_BUILD/DEFAULT/PRODUCTION/PIXDEL6       code   0x008007    program   0x000002
 .config_8008_BUILD/DEFAULT/PRODUCTION/PIXDEL6       code   0x008008    program   0x000002
+                   .udata      udata   0x000020       data   0x000010
+               .udata_shr      udata   0x000070       data   0x000007
 
 
 
@@ -16,19 +18,41 @@ Linker Map File - Created Tue Sep 20 21:39:43 2016
                                Start         End      
                            ---------   ---------      
                             0x000000    0x000002      
-                            0x000004    0x000014      
+                            0x000004    0x0000a1      
                             0x008007    0x008008      
-            22 out of 2055 program addresses used, program memory utilization is 1%
+            163 out of 2055 program addresses used, program memory utilization is 7%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
+             _.org_1_0038   0x000038    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             _.org_1_005C   0x00005c    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             _.org_1_0063   0x000063    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+              accept_loop   0x00004a    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                  accepte   0x000049    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+              diffus_loop   0x000051    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                diffusion   0x000050    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
                      init   0x000005    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
                       isr   0x000004    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
-                     main   0x000015    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                     main   0x000035    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+         nouvelle_couleur   0x000094    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             retrans_loop   0x000044    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               retransmet   0x000042    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
                       rst   0x000000    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               sauvegarde   0x000068    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               store_blue   0x00008e    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               store_exit   0x000093    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+              store_green   0x000088    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                store_red   0x000082    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                  uart_rx   0x00005a    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                  uart_tx   0x000061    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                     bleu   0x000075       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                data_cntr   0x000070       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                    rouge   0x000071       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                    stack   0x000020       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                     vert   0x000073       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
 
 
 
@@ -38,6 +62,28 @@ Linker Map File - Created Tue Sep 20 21:39:43 2016
                       rst   0x000000    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
                       isr   0x000004    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
                      init   0x000005    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
-                     main   0x000015    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                     main   0x000035    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             _.org_1_0038   0x000038    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               retransmet   0x000042    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             retrans_loop   0x000044    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                  accepte   0x000049    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+              accept_loop   0x00004a    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                diffusion   0x000050    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+              diffus_loop   0x000051    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                  uart_rx   0x00005a    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             _.org_1_005C   0x00005c    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                  uart_tx   0x000061    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+             _.org_1_0063   0x000063    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               sauvegarde   0x000068    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                store_red   0x000082    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+              store_green   0x000088    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               store_blue   0x00008e    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+               store_exit   0x000093    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+         nouvelle_couleur   0x000094    program     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                    stack   0x000020       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                data_cntr   0x000070       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                    rouge   0x000071       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                     vert   0x000073       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
+                     bleu   0x000075       data     static C:\Users\Jacques\Documents\GitHub\pixdel6\pixdel6.X\pixdel6.asm
 
 
