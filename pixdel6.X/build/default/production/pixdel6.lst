@@ -1,14 +1,70 @@
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  1
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00001 
-                      00002    
-                      00003     
-                      00004     
-                      00005     include p12f1572.inc
+                      00001 ;
+                      00002 ; * pixdel6
+                      00003 ; * Copyright 2016, Jacques Deschenes
+                      00004 ; * 
+                      00005 ; * This file is part of pixdel6 project.
+                      00006 ; * 
+                      00007 ; * ***  LICENCE ****
+                      00008 ; * This program is free software; you can redistribute it and/or modify
+                      00009 ; * it under the terms of the GNU General Public License as published by
+                      00010 ; * the Free Software Foundation; either version 3 of the License, or
+                      00011 ; * (at your option) any later version.
+                      00012 ; * 
+                      00013 ; * This program is distributed in the hope that it will be useful,
+                      00014 ; * but WITHOUT ANY WARRANTY; without even the implied warranty of
+                      00015 ; * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                      00016 ; * GNU General Public License for more details.
+                      00017 ; * 
+                      00018 ; * You should have received a copy of the GNU General Public License
+                      00019 ; * along with this program; See 'copying.txt' in root directory of source.
+                      00020 ; * If not, write to the Free Software Foundation,
+                      00021 ; * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+                      00022 ; *  
+                      00023 ; * to contact the author:  jd_temp@yahoo.fr
+                      00024 ; * 
+                      00025 
+                      00026 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00027 ;  pixdel6 est la sixième version de pixdel.
+                      00028 ;  Cette version utilise le MCU PIC12F1572.
+                      00029 ;  Le protocole de communication est différent. Il s'agit d'un protocole pour
+                      00030 ;  dispositif attachés en chaîne que j'ai mis au point.
+                      00031 ;  Contrairement au produit commercial WS8212b, chaque LED de la chaîne peut-être
+                      00032 ;  contrôlée individuellement quelque soit sa position dans la chaîne sans qu'il
+                      00033 ;  soit nécessaire d'envoyer une commande à chaque LED qui la précède.
+                      00034 ;  L'idée est basée sur un compteur décrémenté. Chaque paquet de données envoyé
+                      00035 ;  dans la chaîne débute par un compteur. Une LED accepte le paquet si le compteur
+                      00036 ;  est à zéro sinon il décrémente le compteur et le transmet avec le reste du paquet
+                      00037 ;  à la LED suivante. C'est donc la valeur initiale du compteur ainsi que la position 
+                      00038 ;  dans la chaîne qui détermine quel LED accepte le paquet.  Ce protocole permet
+                      00039 ;  donc de réduire la quantité d'information qu'il est nécessaire d'envoyer dans la chaîne.
+                      00040 ;
+                      00041 ;   Le PIC12F1572 possède 3 canaux PWM 16 bits et un périphérique EUSART.
+                      00042 ;   Le EUSART est utilisé pour la communication et les 3 PWM pour le contrôle des
+                      00043 ;   composantes RGB de la LED. Le paquet transmis est donc constitué de 7 octets
+                      00044 ;       1 compteur 8 bits permettant de contrôler 256 pixdel6.
+                      00045 ;       6 octets de contrôle de la couleur, 2 octets par composantes.
+                      00046 ;   FORMAT DU PAQUET:
+                      00047 ;   ------------------      
+                      00048 ;   COMPTEUR|Rh|Rl|Gh|Gl|Bh|Bl    
+                      00049 ;
+                      00050 ;   Puisque le paquet est de taille fixe et qu'en plus le compteur détermine la cible,
+                      00051 ;   il n'est pas nécessaire de faire une pose entre chaque commande comme c'est le cas
+                      00052 ;   pour les WS8212b.
+                      00053 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00054     
+                      00055     include p12f1572.inc
                       00001         LIST
                       00002 
                       00003 ;==========================================================================
@@ -19,27 +75,71 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00008 ;==========================================================================
                       00009 
                       01601         LIST
-8007   39E4           00006     __config _CONFIG1, _FOSC_INTOSC&_WDTE_OFF&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
-8008   1DFC           00007     __config _CONFIG2, _WRT_ALL&_PLLEN_ON&_STVREN_OFF&_LVP_OFF
-                      00008 
-                      00009 
-                      00010     org 0
-0000                  00011 rst:    
-0000   2???           00012     goto init
-                      00013     
-                      00014     org 4
-0004                  00015 isr:
-                      00016     
-                      00017     
-0004   0009           00018     retfie
-                      00019     
-0005                  00020 init:
-                      00021     
-0005                  00022 main:
-                      00023     
-                      00024     
-39E4 1DFC             00025     end
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  2
+8007   39E4           00056     __config _CONFIG1, _FOSC_INTOSC&_WDTE_OFF&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
+8008   1DFC           00057     __config _CONFIG2, _WRT_ALL&_PLLEN_ON&_STVREN_OFF&_LVP_OFF
+                      00058 
+                      00059     radix decimal
+                      00060     
+                      00061 #define TX  RA4
+                      00062 #define RX  RA5
+                      00063  
+                      00064 #define FOSC 32000000
+                      00065 #define BAUD 38400
+                      00066     
+                      00067     org 0
+0000                  00068 rst:    
+0000   2???           00069     goto init
+                      00070     
+                      00071     org 4
+0004                  00072 isr:
+                      00073     
+                      00074     
+0004   0009           00075     retfie
+                      00076     
+0005                  00077 init:
+                      00078 ; clock à 32Mhz
+0005   0021           00079     banksel OSCCON
+0006   3070           00080     movlw (0xE<<IRCF0)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0007   0099           00081     movwf OSCCON
+                      00082 ;désactivation entrées analogique
+0008   0023           00083     banksel ANSELA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0009   018C           00084     clrf ANSELA
+                      00085 ;réglage APFCON pour TX sur RA4 et RX sur RA5   
+000A   0022           00086     banksel APFCON
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000B   151D           00087     bsf APFCON, TXCKSEL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000C   179D           00088     bsf APFCON, RXDTSEL
+                      00089 ; réglage EUSART   38400 BAUD, 8 bits, 1 stop, pas de parité
+                      00090 ; configuration transmission
+000D   0023           00091     banksel TXSTA
+000E   3024           00092     movlw (1<<TXEN)|(1<<BRGH)
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000F   009E           00093     movwf TXSTA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0010   019C           00094     clrf SPBRGH
+0011   3033           00095     movlw FOSC/16/BAUD-1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0012   009B           00096     movwf SPBRGL
+                      00097 ; configuration réception
+0013   3090           00098     movlw (1<<SPEN)|(1<<CREN)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0014   009D           00099     movwf RCSTA
+                      00100 ; configuraion PWM
+                      00101     
+0015                  00102 main:
+                      00103     
+                      00104     
+39E4 1DFC             00105     end
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  4
 
 
 SYMBOL TABLE
@@ -73,6 +173,7 @@ ANSA4                             00000004
 ANSELA                            0000018C
 APFCON                            0000011D
 APFCON0                           0000011D
+BAUD                              38400
 BAUDCON                           0000019F
 BORCON                            00000116
 BORFS                             00000006
@@ -97,13 +198,13 @@ C1NCH1                            00000001
 C1NCH2                            00000002
 C1OE                              00000005
 C1ON                              00000007
-C1OUT                             00000006
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  3
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  5
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+C1OUT                             00000006
 C1PCH0                            00000004
 C1PCH1                            00000005
 C1POL                             00000004
@@ -156,19 +257,20 @@ DACR1                             00000001
 DACR2                             00000002
 DACR3                             00000003
 DACR4                             00000004
-DC                                00000001
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  4
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  6
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+DC                                00000001
 DCIE                              00000001
 DCIF                              00000001
 DC_SHAD                           00000001
 EN                                00000007
 F                                 00000001
 FERR                              00000002
+FOSC                              32000000
 FREE                              00000004
 FSR0                              00000004
 FSR0H                             00000005
@@ -214,14 +316,14 @@ INLVLA                            0000038C
 INLVLA0                           00000000
 INLVLA1                           00000001
 INLVLA2                           00000002
-INLVLA3                           00000003
-INLVLA4                           00000004
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  5
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  7
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+INLVLA3                           00000003
+INLVLA4                           00000004
 INLVLA5                           00000005
 INTCON                            0000000B
 INTE                              00000004
@@ -273,14 +375,14 @@ MODE1                             00000003
 MPWM1EN                           00000000
 MPWM1LD                           00000000
 MPWM1OUT                          00000000
-MPWM2EN                           00000001
-MPWM2LD                           00000001
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  6
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  8
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+MPWM2EN                           00000001
+MPWM2LD                           00000001
 MPWM2OUT                          00000001
 MPWM3EN                           00000002
 MPWM3LD                           00000002
@@ -332,14 +434,14 @@ PIR1                              00000011
 PIR2                              00000012
 PIR3                              00000013
 PLLR                              00000006
-PMADR                             00000191
-PMADRH                            00000192
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  7
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE  9
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PMADR                             00000191
+PMADRH                            00000192
 PMADRL                            00000191
 PMCON1                            00000195
 PMCON2                            00000196
@@ -391,14 +493,14 @@ PWM1DCL6                          00000006
 PWM1DCL7                          00000007
 PWM1EN                            00000007
 PWM1EN_A                          00000000
-PWM1IE                            00000004
-PWM1IF                            00000004
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  8
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 10
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM1IE                            00000004
+PWM1IF                            00000004
 PWM1INTCON                        00000D9C
 PWM1INTE                          00000D9C
 PWM1INTF                          00000D9D
@@ -450,14 +552,14 @@ PWM1PHH3                          00000003
 PWM1PHH4                          00000004
 PWM1PHH5                          00000005
 PWM1PHH6                          00000006
-PWM1PHH7                          00000007
-PWM1PHIE                          00000002
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE  9
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM1PHH7                          00000007
+PWM1PHIE                          00000002
 PWM1PHIF                          00000002
 PWM1PHL                           00000D91
 PWM1PHL0                          00000000
@@ -509,14 +611,14 @@ PWM1TMRL1                         00000001
 PWM1TMRL2                         00000002
 PWM1TMRL3                         00000003
 PWM1TMRL4                         00000004
-PWM1TMRL5                         00000005
-PWM1TMRL6                         00000006
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 10
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 12
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM1TMRL5                         00000005
+PWM1TMRL6                         00000006
 PWM1TMRL7                         00000007
 PWM2CLKCON                        00000DAE
 PWM2CON                           00000DAB
@@ -568,14 +670,14 @@ PWM2OFH1                          00000001
 PWM2OFH2                          00000002
 PWM2OFH3                          00000003
 PWM2OFH4                          00000004
-PWM2OFH5                          00000005
-PWM2OFH6                          00000006
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 11
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 13
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM2OFH5                          00000005
+PWM2OFH6                          00000006
 PWM2OFH7                          00000007
 PWM2OFIE                          00000003
 PWM2OFIF                          00000003
@@ -627,14 +729,14 @@ PWM2PRH4                          00000004
 PWM2PRH5                          00000005
 PWM2PRH6                          00000006
 PWM2PRH7                          00000007
-PWM2PRIE                          00000000
-PWM2PRIF                          00000000
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 12
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM2PRIE                          00000000
+PWM2PRIF                          00000000
 PWM2PRL                           00000DA5
 PWM2PRL0                          00000000
 PWM2PRL1                          00000001
@@ -686,14 +788,14 @@ PWM3DCL                           00000DB3
 PWM3DCL0                          00000000
 PWM3DCL1                          00000001
 PWM3DCL2                          00000002
-PWM3DCL3                          00000003
-PWM3DCL4                          00000004
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 13
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 15
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM3DCL3                          00000003
+PWM3DCL4                          00000004
 PWM3DCL5                          00000005
 PWM3DCL6                          00000006
 PWM3DCL7                          00000007
@@ -745,14 +847,14 @@ PWM3OUT                           00000005
 PWM3OUT_A                         00000002
 PWM3PH                            00000DB1
 PWM3PHH                           00000DB2
-PWM3PHH0                          00000000
-PWM3PHH1                          00000001
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 14
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 16
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM3PHH0                          00000000
+PWM3PHH1                          00000001
 PWM3PHH2                          00000002
 PWM3PHH3                          00000003
 PWM3PHH4                          00000004
@@ -804,14 +906,14 @@ PWM3TMRH3                         00000003
 PWM3TMRH4                         00000004
 PWM3TMRH5                         00000005
 PWM3TMRH6                         00000006
-PWM3TMRH7                         00000007
-PWM3TMRL                          00000DB9
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 15
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 17
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM3TMRH7                         00000007
+PWM3TMRL                          00000DB9
 PWM3TMRL0                         00000000
 PWM3TMRL1                         00000001
 PWM3TMRL2                         00000002
@@ -835,6 +937,7 @@ RCIF                              00000005
 RCREG                             00000199
 RCSTA                             0000019D
 RD                                00000000
+RX                                RA5
 RX9                               00000006
 RX9D                              00000000
 RXDTSEL                           00000007
@@ -862,15 +965,15 @@ STKPTR                            00000FED
 STKUNF                            00000006
 SWDTEN                            00000000
 SYNC                              00000004
-T0CS                              00000005
-T0IE                              00000005
-T0IF                              00000002
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 16
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 18
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
 T0SE                              00000004
 T1CKPS0                           00000004
 T1CKPS1                           00000005
@@ -921,15 +1024,15 @@ TRIGSEL2                          00000006
 TRIGSEL3                          00000007
 TRISA                             0000008C
 TRISA0                            00000000
-TRISA1                            00000001
-TRISA2                            00000002
-TRISA3                            00000003
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 17
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 19
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
 TRISA4                            00000004
 TRISA5                            00000005
 TRMT                              00000001
@@ -941,6 +1044,7 @@ TUN2                              00000002
 TUN3                              00000003
 TUN4                              00000004
 TUN5                              00000005
+TX                                RA4
 TX9                               00000006
 TX9D                              00000000
 TXCKSEL                           00000002
@@ -979,16 +1083,16 @@ _BOREN_ON                         00003FFF
 _BOREN_SBODEN                     00003BFF
 _BORV_19                          00003FFF
 _BORV_HI                          00003BFF
-_BORV_LO                          00003FFF
-_CLKOUTEN_OFF                     00003FFF
-_CLKOUTEN_ON                      000037FF
-_CONFIG1                          00008007
-MPASM 5.68                       PIXDEL6.ASM   9-20-2016  11:45:55         PAGE 18
+MPASM 5.68                       PIXDEL6.ASM   9-20-2016  21:39:42         PAGE 20
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_BORV_LO                          00003FFF
+_CLKOUTEN_OFF                     00003FFF
+_CLKOUTEN_ON                      000037FF
+_CONFIG1                          00008007
 _CONFIG2                          00008008
 _CP_OFF                           00003FFF
 _CP_ON                            00003F7F
@@ -1024,11 +1128,11 @@ _WRT_OFF                          00003FFF
 __12F1572                         00000001
 init                              00000005
 isr                               00000004
-main                              00000005
+main                              00000015
 rst                               00000000
 
 Errors   :     0
 Warnings :     0 reported,     0 suppressed
-Messages :     0 reported,     0 suppressed
+Messages :     8 reported,     0 suppressed
 
 
