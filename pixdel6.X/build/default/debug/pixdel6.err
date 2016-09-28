@@ -39,22 +39,19 @@ Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 241 : Register i
 Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 244 : Using default destination of 1 (file).
 Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 244 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 256 : Using default destination of 1 (file).
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 278 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 286 : Using default destination of 1 (file).
-Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 288 : Using default destination of 1 (file).
+Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 282 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 290 : Using default destination of 1 (file).
 Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 292 : Using default destination of 1 (file).
-Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 297 : Using default destination of 1 (file).
-Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 302 : Using default destination of 1 (file).
-Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 307 : Using default destination of 1 (file).
-Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 314 : Using default destination of 1 (file).
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 325 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 337 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 343 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 345 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 296 : Using default destination of 1 (file).
+Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 301 : Using default destination of 1 (file).
+Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 306 : Using default destination of 1 (file).
+Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 311 : Using default destination of 1 (file).
+Message[305] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 318 : Using default destination of 1 (file).
+Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 329 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 341 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 347 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 349 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 351 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 353 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 354 : Register in operand not in bank 0.  Ensure that bank bits are correct.
 Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 355 : Register in operand not in bank 0.  Ensure that bank bits are correct.
-Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 356 : Register in operand not in bank 0.  Ensure that bank bits are correct.
+Message[302] /home/jacques/github/pixdel6/pixdel6.X/pixdel6.asm 357 : Register in operand not in bank 0.  Ensure that bank bits are correct.

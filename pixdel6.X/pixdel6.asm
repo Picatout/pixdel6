@@ -53,10 +53,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
     
     include p12f1572.inc
-    __config _CONFIG1, _FOSC_INTOSC&_WDTE_NSLEEP&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
+    __config _CONFIG1, _FOSC_INTOSC&_WDTE_OFF&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
     __config _CONFIG2, _WRT_ALL&_PLLEN_ON&_STVREN_OFF&_LVP_OFF
 
-    radix decimal
+    radix dec
 
 #define TX  RA4
 #define RX  RA5
@@ -76,12 +76,17 @@
 #define VERT_PIN RA1  ; PWM1
 #define VERT_PWMDCL PWM1DCL
 #define VERT_PWMDCH PWM1DCH
-#define VERT_PWMPR PWM1PR    
+#define VERT_PWMPR PWM1PR
+#define VERROUGE_T_PWMPR PWM1PR    
 #define VERT_PWMPH PWM1PH ; phase
-#define VERT_PWMOF PWM1OF ; offset
+#define VERTROUGE__PWMOF PWM1OF ; offset
 #define VERT_PWMTMR PWM1TMR ; timer
 #define VERT_PWMCON PWM1CON ; registre de contrôle
 #define VERT_PWMCLKCON PWM1CLKCON    
+#define VERT_PWMOFCON PWM1OFCON ; contrôle offset
+#define VERT_PWMLDCON PWM1LDCON ; load control
+#define VERT_PWMINTE PWM1INTE  ; activation interruption
+#define VERT_PWMINTF PWM1INTF  ; indicateurs d'interruption    
 #define BLEU_PIN RA0   ; PWM2
 #define BLEU_PWMDCL PWM2DCL
 #define BLEU_PWMDCH PWM2DCH
@@ -91,11 +96,18 @@
 #define BLEU_PWMTMR PWM2TMR ; timer
 #define BLEU_PWMCON PWM2CON
 #define BLEU_PWMCLKCON PWM2CLKCON    
+#define BLEU_PWMOFCON PWM2OFCON ; contrôle offset
+#define BLEU_PWMLDCON PWM2LDCON ; load control
+#define BLEU_PWMINTE PWM2INTE  ; activation interruption
+#define BLEU_PWMINTF PWM2INTF  ; indicateurs d'interruption    
+
 #define PWM_BANK PWMEN
 
 #define FOSC 32000000
 #define BAUD 115200 ;  57600, 38400
 
+#define DPTOS  INDF1  ; sommet de la pile des arguments
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -110,7 +122,7 @@ pushw macro
 
 dup macro
     movfw INDF1
-    pushw
+    movwi ++FSR1
     endm
     
 drop macro
@@ -131,9 +143,12 @@ case macro valeur, cible
     udata
 stack res 16
  
-    udata_shr
-data_cntr res 1
-rouge res 2  ; high:low
+    udata_shr 0x70
+msec res 1 ; nombre de millisecondes depuis le reset    
+a_recevoir res 1 ; nombre d'octets à recevoir
+; sauvegarde octets nouvelle couleur
+; RH:RL|GH:GL|BH:BL 
+rouge res 2  
 vert  res 2
 bleu  res 2
  
@@ -143,6 +158,8 @@ rst:
     
     org 4
 isr:
+    incf msec
+    bcf INTCON,TMR0IF
     retfie
     
 init:
@@ -154,6 +171,14 @@ init:
     banksel WDTCON
     clrf WDTCON
     bsf WDTCON,WDTPS2
+; TIMER0 utilisé comme compteur millisecondes
+    movlw 4
+    movwf OPTION_REG
+    clrf msec
+    banksel TMR0
+    clrf TMR0
+    movlw (1<<GIE)|(1<<TMR0IE)
+    movwf INTCON
 ;initialisation pointeur de pile
     movlw high stack
     movwf FSR1H
@@ -177,41 +202,73 @@ init:
     movlw (1<<SPEN)|(1<<CREN)
     movwf RCSTA
 ; configuraion PWM
-    banksel PWMEN
+    banksel PWM_BANK
 ; composante rouge
+    clrf ROUGE_PWMDCH
+    clrf ROUGE_PWMDCL
     clrf ROUGE_PWMPH
+    clrf ROUGE_PWMPH+1
+    clrf ROUGE_PWMLDCON
     movlw 255
     movwf ROUGE_PWMPR
     movwf ROUGE_PWMPR+1
     clrf ROUGE_PWMCLKCON
-    movlw (3<<6)|(1<<4)
+    movlw (3<<OE);|(1<<POL)
     movwf ROUGE_PWMCON
 ; composante verte
+    clrf VERT_PWMDCH
+    clrf VERT_PWMDCL
     clrf VERT_PWMPH
+    clrf VERT_PWMPH+1
+    clrf VERT_PWMLDCON
     movlw 255
     movwf VERT_PWMPR
     movwf VERT_PWMPR+1
     clrf VERT_PWMCLKCON
-    movlw (3<<6)|(1<<4)
+    movlw (3<<OE);|(1<<POL)
     movwf VERT_PWMCON
 ;  composante bleu
+    clrf BLEU_PWMDCH
+    clrf BLEU_PWMDCL
     clrf BLEU_PWMPH
+    clrf BLEU_PWMPH+1
+    clrf BLEU_PWMLDCON
     movlw 255
     movwf BLEU_PWMPR
     movwf BLEU_PWMPR+1
     clrf BLEU_PWMCLKCON
-    movlw (3<<6)|(1<<4)
+    movlw (3<<OE);|(1<<POL)
     movwf BLEU_PWMCON
     banksel TRISA
     movlw ~((1<<ROUGE_PIN)|(1<<VERT_PIN)|(1<<BLEU_PIN))
     andwf TRISA
-    clrf data_cntr
+;met à zéro les couleurs
+    movlw rouge
+    movwf FSR0L
+    clrf FSR0H
+    movlw 6
+    pushw
+    clrw
+    movf DPTOS,F
+    skpnz
+    bra $+4
+    movwi FSR0++
+    decf DPTOS
+    bra $-5
+    drop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; attend la reception d'un octet
 ; les 7 octets doivent-être reçu et traité
 ; en moins de 16 msec sinon le WDT réinitialise le MCU
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 main:
+    call nouvelle_couleur
+    movlw 7 ; 7 octets par commande
+    movwf a_recevoir
+    movlw low rouge
+    movwf FSR0L
+    movlw high rouge
+    movwf FSR0H
     banksel PIR1
     clrwdt
     btfss PIR1,RCIF
@@ -225,35 +282,37 @@ main:
     xorlw 255
     skpnz
     bra diffusion
-    call uart_tx
 retransmet: ; au suivant
-    decf INDF1   ; décrémente le compteur
+    decf DPTOS   ; décrémente le compteur
     call uart_tx ; et le retransmet
+    decf a_recevoir ; compteur retransmis
 retrans_loop:    ; retransmet les 6 octets suivants
     call uart_rx
     call uart_tx
-    decfsz data_cntr
+    decfsz a_recevoir
     bra retrans_loop
     bra main
 accepte: ; compteur à zéro accepte la commande
     drop
+    decf a_recevoir
 accept_loop:    
     call uart_rx
-    call sauvegarde
-    decfsz data_cntr
+    popw
+    movwi FSR0++
+    decfsz a_recevoir
     bra accept_loop
-    call nouvelle_couleur
     bra main
 diffusion: ; message accepté par tous
     call uart_tx ; retransmet le compteur
+    decf a_recevoir
 diffus_loop:    
     call uart_rx 
     dup              ; garde une copie 
     call uart_tx     ; et retransmet
-    call sauvegarde
-    decfsz data_cntr
+    popw
+    movwi FSR0++
+    decfsz a_recevoir
     bra diffus_loop
-    call nouvelle_couleur
     bra main
     
 ; attend un octet du uart
@@ -271,51 +330,13 @@ uart_rx:
 ; octet à transmettre au sommet de la pile    
 uart_tx:
     banksel PIR1
-    btfsc PIR1,TXIF
+    btfss PIR1,TXIF
     bra $-1
     banksel TXREG
     popw
     movwf TXREG
     return
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; mais en file d'attente les valeurs reçues
-; la valeur de data_cntr détermine
-; la variable    
-; le sommet de la pile contient la valeur 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
-sauvegarde:
-    movfw data_cntr
-    case 6, store_red
-    case 5, store_red
-    case 4, store_green
-    case 3, store_green
-    case 2, store_blue
-    case 1, store_blue
-    reset ; erreur ne devrait pas arrivé ici.
-store_red:
-    popw
-    btfss data_cntr,0
-    movwf rouge ; octet fort
-    btfsc data_cntr,0
-    movwf rouge+1 ; octet faible
-    bra store_exit
-store_green:
-    popw
-    btfss data_cntr,0
-    movwf vert
-    btfsc data_cntr,0
-    movwf vert+1
-    bra store_exit
-store_blue:
-    popw
-    btfss data_cntr,0
-    movwf bleu
-    btfsc data_cntr,0
-    movwf bleu+1
-store_exit:    
-    return
-
 nouvelle_couleur:
     banksel PWM_BANK
     movfw rouge
@@ -330,6 +351,9 @@ nouvelle_couleur:
     movwf BLEU_PWMDCH
     movfw bleu+1
     movwf BLEU_PWMDCL
+    bsf ROUGE_PWMLDCON,7
+    bsf VERT_PWMLDCON,7
+    bsf BLEU_PWMLDCON,7
     return
     
     end

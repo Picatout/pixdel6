@@ -19,7 +19,7 @@ endif
 endif
 
 # Environment
-MKDIR=gnumkdir -p
+MKDIR=mkdir -p
 RM=rm -f 
 MV=mv 
 CP=cp 
@@ -92,7 +92,7 @@ ${OBJECTDIR}/pixdel6.o: pixdel6.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/pixdel6.o.d 
 	@${RM} ${OBJECTDIR}/pixdel6.o 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/pixdel6.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/pixdel6.lst\" -e\"${OBJECTDIR}/pixdel6.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/pixdel6.o\" \"pixdel6.asm\" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/pixdel6.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION) -u  -l\\\"${OBJECTDIR}/pixdel6.lst\\\" -e\\\"${OBJECTDIR}/pixdel6.err\\\" $(ASM_OPTIONS)    -o\\\"${OBJECTDIR}/pixdel6.o\\\" \\\"pixdel6.asm\\\" 
 	@${DEP_GEN} -d "${OBJECTDIR}/pixdel6.o"
 	@${FIXDEPS} "${OBJECTDIR}/pixdel6.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
@@ -101,7 +101,7 @@ ${OBJECTDIR}/pixdel6.o: pixdel6.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/pixdel6.o.d 
 	@${RM} ${OBJECTDIR}/pixdel6.o 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/pixdel6.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/pixdel6.lst\" -e\"${OBJECTDIR}/pixdel6.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/pixdel6.o\" \"pixdel6.asm\" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/pixdel6.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION) -u  -l\\\"${OBJECTDIR}/pixdel6.lst\\\" -e\\\"${OBJECTDIR}/pixdel6.err\\\" $(ASM_OPTIONS)    -o\\\"${OBJECTDIR}/pixdel6.o\\\" \\\"pixdel6.asm\\\" 
 	@${DEP_GEN} -d "${OBJECTDIR}/pixdel6.o"
 	@${FIXDEPS} "${OBJECTDIR}/pixdel6.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
@@ -135,7 +135,7 @@ endif
 # Enable dependency checking
 .dep.inc: .depcheck-impl
 
-DEPFILES=$(shell mplabwildcard ${POSSIBLE_DEPFILES})
+DEPFILES=$(shell "${PATH_TO_IDE_BIN}"mplabwildcard ${POSSIBLE_DEPFILES})
 ifneq (${DEPFILES},)
 include ${DEPFILES}
 endif
