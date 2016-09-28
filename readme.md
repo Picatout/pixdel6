@@ -1,5 +1,7 @@
 # pixdel6
 
+Copyright Jacques Deschênes, 2016
+
 Nouvelle version de PIXDEL  utilisant un MCU PIC12F1572 et un protocol de communication différent.
  
 # protocole de communication
@@ -24,6 +26,9 @@ La chaîne peut comprendre un maximum de 255 pixdel. La communication se
 fait par RS-232 à 115200BAUD.
 
 
+licence logicielle: GPLv3,  voir copying.tx
+
+licence matérielle et autre documents: CC-BY-SA,  voir cc-licence.html
 
 
 
