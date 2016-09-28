@@ -1,4 +1,4 @@
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  1
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -39,32 +39,44 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00033 ;  soit nécessaire d'envoyer une commande à chaque LED qui la précède.
                       00034 ;  L'idée est basée sur un compteur décrémenté. Chaque paquet de données envoyé
                       00035 ;  dans la chaîne débute par un compteur. Une LED accepte le paquet si le compteur
-                      00036 ;  est à zéro sinon il décrémente le compteur et le transmet avec le reste du paquet
+                      00036 ;  est à 0 ou 1 sinon il décrémente le compteur et le transmet avec le reste du paquet
                       00037 ;  à la LED suivante. C'est donc la valeur initiale du compteur ainsi que la position 
-                      00038 ;  dans la chaîne qui détermine quel LED accepte le paquet.  Ce protocole permet
+                      00038 ;  dans la chaîne qui détermine quelle LED accepte le paquet.  Ce protocole permet
                       00039 ;  donc de réduire la quantité d'information qu'il est nécessaire d'envoyer dans la chaîne.
-                      00040 ;
-                      00041 ;   Le PIC12F1572 possède 3 canaux PWM 16 bits et un périphérique EUSART.
-                      00042 ;   Le EUSART est utilisé pour la communication et les 3 PWM pour le contrôle des
-                      00043 ;   composantes RGB de la LED. Le paquet transmis est donc constitué de 7 octets
-                      00044 ;       1 compteur 8 bits permettant de contrôler 255 pixdel6.
-                      00045 ;       6 octets de contrôle de la couleur, 2 octets par composantes.
-                      00046 ;   FORMAT DU PAQUET:
-                      00047 ;   ------------------      
-                      00048 ;   COMPTEUR|Rh|Rl|Gh|Gl|Bh|Bl    
-                      00049 ;   >>>> COMPTEUR=255 pour message de diffusion <<<<
-                      00050 ;   Puisque le paquet est de taille fixe et qu'en plus le compteur détermine la cible,
-                      00051 ;   il n'est pas nécessaire de faire une pose entre chaque commande comme c'est le cas
-                      00052 ;   pour les WS8212b.
-                      00053 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  2
+                      00040 ;  
+                      00041 ;  Si la valeur du compteur à est zéro il s'agit un message de diffusion dans ce cas
+                      00042 ;  Le pixdel reconnait la commande mais la retransmet aussi sans décrémenter le compteur.
+                      00043 ;  ce protocole peut donc contrôler une chaîne de 255 pixdel.    
+                      00044 ;    
+                      00045 ;   Le PIC12F1572 possède 3 canaux PWM 16 bits et un périphérique EUSART.
+                      00046 ;   Le EUSART est utilisé pour la communication et les 3 PWM pour le contrôle des
+                      00047 ;   composantes RGB de la LED. Le paquet transmis est donc constitué de 7 octets
+                      00048 ;       1 compteur 8 bits permettant de contrôler 255 pixdel6.
+                      00049 ;       6 octets de contrôle de la couleur, 2 octets par composantes.
+                      00050 ;   FORMAT DU PAQUET:
+                      00051 ;   ------------------      
+                      00052 ;   COMPTEUR|Rh|Rl|Gh|Gl|Bh|Bl    
+                      00053 ;   >>>> COMPTEUR=255 pour message de diffusion <<<<
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00054     
-                      00055     include p12f1572.inc
+                      00054 ;   Puisque le paquet est de taille fixe et qu'en plus le compteur détermine la cible,
+                      00055 ;   il n'est pas nécessaire de faire une pose entre chaque commande comme c'est le cas
+                      00056 ;   pour les WS8212b.
+                      00057 ;==============================================================================    
+                      00058 ;| valeur du compteur  |   action                                              |
+                      00059 ;==============================================================================    
+                      00060 ;|          0          |  diffusion: accepte le message et transmet au suivant |
+                      00061 ;|          1          |  accepte le message mais ne transmet pas au suivant   |
+                      00062 ;|        2-255        |  refuse le message, décrémente le compteur et         |
+                      00063 ;|                     |  retransmet au suivant.                               |
+                      00064 ;==============================================================================    
+                      00065 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+                      00066     
+                      00067     include p12f1572.inc
                       00001         LIST
                       00002 
                       00003 ;==========================================================================
@@ -75,423 +87,426 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00008 ;==========================================================================
                       00009 
                       01601         LIST
-8007   39E4           00056     __config _CONFIG1, _FOSC_INTOSC&_WDTE_OFF&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
-8008   1DFC           00057     __config _CONFIG2, _WRT_ALL&_PLLEN_ON&_STVREN_OFF&_LVP_OFF
-                      00058 
-                      00059     radix dec
-                      00060 
-                      00061 #define TX  RA4
-                      00062 #define RX  RA5
-                      00063 #define ROUGE_PIN RA2    ; PWM3
-                      00064 #define ROUGE_PWMDCL PWM3DCL ; rapport cyclique
-                      00065 #define ROUGE_PWMDCH PWM3DCH ; octet fort    
-                      00066 #define ROUGE_PWMPR PWM3PR ;période
-                      00067 #define ROUGE_PWMPH PWM3PH ; phase
-                      00068 #define ROUGE_PWMOF PWM3OF ; offset
-                      00069 #define ROUGE_PWMTMR PWM3TMR ; timer
-                      00070 #define ROUGE_PWMCON PWM3CON ; registre de contrôle
-                      00071 #define ROUGE_PWMCLKCON PWM3CLKCON  ; contrôle clock
-                      00072 #define ROUGE_PWMOFCON PWM3OFCON ; contrôle offset
-                      00073 #define ROUGE_PWMLDCON PWM3LDCON ; load control
-                      00074 #define ROUGE_PWMINTE PWM3INTE  ; activation interruption
-                      00075 #define ROUGE_PWMINTF PWM3INTF  ; indicateurs d'interruption    
-                      00076 #define VERT_PIN RA1  ; PWM1
-                      00077 #define VERT_PWMDCL PWM1DCL
-                      00078 #define VERT_PWMDCH PWM1DCH
-                      00079 #define VERT_PWMPR PWM1PR
-                      00080 #define VERROUGE_T_PWMPR PWM1PR    
-                      00081 #define VERT_PWMPH PWM1PH ; phase
-                      00082 #define VERTROUGE__PWMOF PWM1OF ; offset
-                      00083 #define VERT_PWMTMR PWM1TMR ; timer
-                      00084 #define VERT_PWMCON PWM1CON ; registre de contrôle
-                      00085 #define VERT_PWMCLKCON PWM1CLKCON    
-                      00086 #define VERT_PWMOFCON PWM1OFCON ; contrôle offset
-                      00087 #define VERT_PWMLDCON PWM1LDCON ; load control
-                      00088 #define VERT_PWMINTE PWM1INTE  ; activation interruption
-                      00089 #define VERT_PWMINTF PWM1INTF  ; indicateurs d'interruption    
-                      00090 #define BLEU_PIN RA0   ; PWM2
-                      00091 #define BLEU_PWMDCL PWM2DCL
-                      00092 #define BLEU_PWMDCH PWM2DCH
-                      00093 #define BLEU_PWMPR PWM2PR
-                      00094 #define BLEU_PWMPH PWM2PH ; phase
-                      00095 #define BLEU_PWMOF PWM2OF ; offset
-                      00096 #define BLEU_PWMTMR PWM2TMR ; timer
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  3
+8007   39E4           00068     __config _CONFIG1, _FOSC_INTOSC&_WDTE_OFF&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
+8008   1DFC           00069     __config _CONFIG2, _WRT_ALL&_PLLEN_ON&_STVREN_OFF&_LVP_OFF
+                      00070 
+                      00071     radix dec
+                      00072 
+                      00073 #define TX  RA4
+                      00074 #define RX  RA5
+                      00075 #define ROUGE_PIN RA2    ; PWM3
+                      00076 #define ROUGE_PWMDCL PWM3DCL ; rapport cyclique
+                      00077 #define ROUGE_PWMDCH PWM3DCH ; octet fort    
+                      00078 #define ROUGE_PWMPR PWM3PR ;période
+                      00079 #define ROUGE_PWMPH PWM3PH ; phase
+                      00080 #define ROUGE_PWMOF PWM3OF ; offset
+                      00081 #define ROUGE_PWMTMR PWM3TMR ; timer
+                      00082 #define ROUGE_PWMCON PWM3CON ; registre de contrôle
+                      00083 #define ROUGE_PWMCLKCON PWM3CLKCON  ; contrôle clock
+                      00084 #define ROUGE_PWMOFCON PWM3OFCON ; contrôle offset
+                      00085 #define ROUGE_PWMLDCON PWM3LDCON ; load control
+                      00086 #define ROUGE_PWMINTE PWM3INTE  ; activation interruption
+                      00087 #define ROUGE_PWMINTF PWM3INTF  ; indicateurs d'interruption    
+                      00088 #define VERT_PIN RA1  ; PWM1
+                      00089 #define VERT_PWMDCL PWM1DCL
+                      00090 #define VERT_PWMDCH PWM1DCH
+                      00091 #define VERT_PWMPR PWM1PR
+                      00092 #define VERROUGE_T_PWMPR PWM1PR    
+                      00093 #define VERT_PWMPH PWM1PH ; phase
+                      00094 #define VERTROUGE__PWMOF PWM1OF ; offset
+                      00095 #define VERT_PWMTMR PWM1TMR ; timer
+                      00096 #define VERT_PWMCON PWM1CON ; registre de contrôle
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00097 #define BLEU_PWMCON PWM2CON
-                      00098 #define BLEU_PWMCLKCON PWM2CLKCON    
-                      00099 #define BLEU_PWMOFCON PWM2OFCON ; contrôle offset
-                      00100 #define BLEU_PWMLDCON PWM2LDCON ; load control
-                      00101 #define BLEU_PWMINTE PWM2INTE  ; activation interruption
-                      00102 #define BLEU_PWMINTF PWM2INTF  ; indicateurs d'interruption    
-                      00103 
-                      00104 #define PWM_BANK PWMEN
-                      00105 
-                      00106 #define FOSC 32000000
-                      00107 #define BAUD 115200 ;  57600, 38400
-                      00108 
-                      00109 #define DPTOS  INDF1  ; sommet de la pile des arguments
-                      00110     
-                      00111 ;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00112 ;   macros
-                      00113 ;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00114     
-                      00115 popw  macro
-                      00116     moviw FSR1--
-                      00117     endm
-                      00118  
-                      00119 pushw macro
-                      00120     movwi ++FSR1
-                      00121     endm
+                      00097 #define VERT_PWMCLKCON PWM1CLKCON    
+                      00098 #define VERT_PWMOFCON PWM1OFCON ; contrôle offset
+                      00099 #define VERT_PWMLDCON PWM1LDCON ; load control
+                      00100 #define VERT_PWMINTE PWM1INTE  ; activation interruption
+                      00101 #define VERT_PWMINTF PWM1INTF  ; indicateurs d'interruption    
+                      00102 #define BLEU_PIN RA0   ; PWM2
+                      00103 #define BLEU_PWMDCL PWM2DCL
+                      00104 #define BLEU_PWMDCH PWM2DCH
+                      00105 #define BLEU_PWMPR PWM2PR
+                      00106 #define BLEU_PWMPH PWM2PH ; phase
+                      00107 #define BLEU_PWMOF PWM2OF ; offset
+                      00108 #define BLEU_PWMTMR PWM2TMR ; timer
+                      00109 #define BLEU_PWMCON PWM2CON
+                      00110 #define BLEU_PWMCLKCON PWM2CLKCON    
+                      00111 #define BLEU_PWMOFCON PWM2OFCON ; contrôle offset
+                      00112 #define BLEU_PWMLDCON PWM2LDCON ; load control
+                      00113 #define BLEU_PWMINTE PWM2INTE  ; activation interruption
+                      00114 #define BLEU_PWMINTF PWM2INTF  ; indicateurs d'interruption    
+                      00115 
+                      00116 #define PWM_BANK PWMEN
+                      00117 
+                      00118 #define FOSC 32000000
+                      00119 #define BAUD 115200 ;  57600, 38400
+                      00120 
+                      00121 #define DPTOS  INDF1  ; sommet de la pile des arguments
                       00122 
-                      00123 dup macro
-                      00124     movfw INDF1
-                      00125     movwi ++FSR1
-                      00126     endm
-                      00127     
-                      00128 drop macro
-                      00129     addfsr FSR1,-1
-                      00130     endm
-                      00131 
-                      00132 case macro valeur, cible
-                      00133     xorlw valeur
-                      00134     skpnz
-                      00135     bra cible
-                      00136     xorlw valeur
-                      00137     endm
-                      00138     
-                      00139 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00140 ;   variables
-                      00141 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00123 #define DIFFUSER  0   ; message de diffusion
+                      00124 #define ACCEPTER  1   ; message accepté
+                      00125     
+                      00126 ;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00127 ;   macros
+                      00128 ;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00129     
+                      00130 popw  macro
+                      00131     moviw FSR1--
+                      00132     endm
+                      00133  
+                      00134 pushw macro
+                      00135     movwi ++FSR1
+                      00136     endm
+                      00137 
+                      00138 dup macro
+                      00139     movfw INDF1
+                      00140     movwi ++FSR1
+                      00141     endm
                       00142     
-                      00143     udata
-0000                  00144 stack res 16
-                      00145  
-                      00146     udata_shr 0x70
-0070                  00147 msec res 1 ; nombre de millisecondes depuis le reset    
-0071                  00148 a_recevoir res 1 ; nombre d'octets à recevoir
-                      00149 ; sauvegarde octets nouvelle couleur
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  4
+                      00143 drop macro
+                      00144     addfsr FSR1,-1
+                      00145     endm
+                      00146 
+                      00147 case macro valeur, cible
+                      00148     xorlw valeur
+                      00149     skpnz
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00150 ; RH:RL|GH:GL|BH:BL 
-0072                  00151 rouge res 2  
-0074                  00152 vert  res 2
-0076                  00153 bleu  res 2
-                      00154  
-                      00155     org 0
-0000                  00156 rst:    
-0000   2???           00157     goto init
-                      00158     
-                      00159     org 4
-0004                  00160 isr:
+                      00150     bra cible
+                      00151     xorlw valeur
+                      00152     endm
+                      00153     
+                      00154 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00155 ;   variables
+                      00156 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00157     
+                      00158     udata
+0000                  00159 stack res 16
+                      00160  
+                      00161     udata_shr 0x70
+0070                  00162 msec res 1 ; nombre de millisecondes depuis le reset    
+0071                  00163 a_recevoir res 1 ; nombre d'octets à recevoir
+                      00164 ; sauvegarde octets nouvelle couleur
+                      00165 ; RH:RL|GH:GL|BH:BL 
+0072                  00166 rouge res 2  
+0074                  00167 vert  res 2
+0076                  00168 bleu  res 2
+                      00169  
+                      00170     org 0
+0000                  00171 rst:    
+0000   2???           00172     goto init
+                      00173     
+                      00174     org 4
+0004                  00175 isr:
 Message[305]: Using default destination of 1 (file).
-0004   0A??           00161     incf msec
-0005   110B           00162     bcf INTCON,TMR0IF
-0006   0009           00163     retfie
-                      00164     
-0007                  00165 init:
-                      00166 ; clock à 32Mhz
-0007   0021           00167     banksel OSCCON
-0008   3070           00168     movlw (0xE<<IRCF0)
+0004   0A??           00176     incf msec
+0005   110B           00177     bcf INTCON,TMR0IF
+0006   0009           00178     retfie
+                      00179     
+0007                  00180 init:
+                      00181 ; clock à 32Mhz
+0007   0021           00182     banksel OSCCON
+0008   3070           00183     movlw (0xE<<IRCF0)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0009   0099           00169     movwf OSCCON
-                      00170 ; Watch dog timer expire à 16 msec.
-000A   0021           00171     banksel WDTCON
+0009   0099           00184     movwf OSCCON
+                      00185 ; Watch dog timer expire à 16 msec.
+000A   0021           00186     banksel WDTCON
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-000B   0197           00172     clrf WDTCON
+000B   0197           00187     clrf WDTCON
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-000C   1597           00173     bsf WDTCON,WDTPS2
-                      00174 ; TIMER0 utilisé comme compteur millisecondes
-000D   3004           00175     movlw 4
+000C   1597           00188     bsf WDTCON,WDTPS2
+                      00189 ; TIMER0 utilisé comme compteur millisecondes
+000D   3004           00190     movlw 4
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-000E   0095           00176     movwf OPTION_REG
-000F   01??           00177     clrf msec
-0010   0020           00178     banksel TMR0
-0011   0195           00179     clrf TMR0
-0012   30A0           00180     movlw (1<<GIE)|(1<<TMR0IE)
-0013   008B           00181     movwf INTCON
-                      00182 ;initialisation pointeur de pile
-0014   30??           00183     movlw high stack
-0015   0087           00184     movwf FSR1H
-0016   30??           00185     movlw low stack
-0017   0086           00186     movwf FSR1L
-                      00187 ;désactivation entrées analogique
-0018   0023           00188     banksel ANSELA
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0019   018C           00189     clrf ANSELA
-                      00190 ;réglage APFCON pour TX sur RA4 et RX sur RA5   
-001A   0022           00191     banksel APFCON
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001B   151D           00192     bsf APFCON, TXCKSEL
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001C   179D           00193     bsf APFCON, RXDTSEL
-                      00194 ; réglage UART   BAUD, 8 bits, 1 stop, pas de parité
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  5
+000E   0095           00191     movwf OPTION_REG
+000F   01??           00192     clrf msec
+0010   0020           00193     banksel TMR0
+0011   0195           00194     clrf TMR0
+0012   30A0           00195     movlw (1<<GIE)|(1<<TMR0IE)
+0013   008B           00196     movwf INTCON
+                      00197 ;initialisation pointeur de pile
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00195 ; configuration transmission
-001D   0023           00196     banksel TXSTA
-001E   3024           00197     movlw (1<<TXEN)|(1<<BRGH)
+0014   30??           00198     movlw high stack
+0015   0087           00199     movwf FSR1H
+0016   30??           00200     movlw low stack
+0017   0086           00201     movwf FSR1L
+                      00202 ;désactivation entrées analogique
+0018   0023           00203     banksel ANSELA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001F   009E           00198     movwf TXSTA
-0020   3010           00199     movlw FOSC/16/BAUD-1
+0019   018C           00204     clrf ANSELA
+                      00205 ;réglage APFCON pour TX sur RA4 et RX sur RA5   
+001A   0022           00206     banksel APFCON
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0021   009B           00200     movwf SPBRGL
-                      00201 ; configuration réception  UART
-0022   3090           00202     movlw (1<<SPEN)|(1<<CREN)
+001B   151D           00207     bsf APFCON, TXCKSEL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0023   009D           00203     movwf RCSTA
-                      00204 ; configuraion PWM
-0024   003B           00205     banksel PWM_BANK
-                      00206 ; composante rouge
+001C   179D           00208     bsf APFCON, RXDTSEL
+                      00209 ; réglage UART   BAUD, 8 bits, 1 stop, pas de parité
+                      00210 ; configuration transmission
+001D   0023           00211     banksel TXSTA
+001E   3024           00212     movlw (1<<TXEN)|(1<<BRGH)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0025   01B4           00207     clrf ROUGE_PWMDCH
+001F   009E           00213     movwf TXSTA
+0020   3010           00214     movlw FOSC/16/BAUD-1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0026   01B3           00208     clrf ROUGE_PWMDCL
+0021   009B           00215     movwf SPBRGL
+                      00216 ; configuration réception  UART
+0022   3090           00217     movlw (1<<SPEN)|(1<<CREN)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0027   01B1           00209     clrf ROUGE_PWMPH
+0023   009D           00218     movwf RCSTA
+                      00219 ; configuraion PWM
+0024   003B           00220     banksel PWM_BANK
+                      00221 ; composante rouge
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0028   01B2           00210     clrf ROUGE_PWMPH+1
+0025   01B4           00222     clrf ROUGE_PWMDCH
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0029   01BF           00211     clrf ROUGE_PWMLDCON
-002A   30FF           00212     movlw 255
+0026   01B3           00223     clrf ROUGE_PWMDCL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002B   00B5           00213     movwf ROUGE_PWMPR
+0027   01B1           00224     clrf ROUGE_PWMPH
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002C   00B6           00214     movwf ROUGE_PWMPR+1
+0028   01B2           00225     clrf ROUGE_PWMPH+1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002D   01BE           00215     clrf ROUGE_PWMCLKCON
-002E   30C0           00216     movlw (3<<OE);|(;|(1<<POL)
+0029   01BF           00226     clrf ROUGE_PWMLDCON
+002A   30FF           00227     movlw 255
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002F   00BB           00217     movwf ROUGE_PWMCON
-                      00218 ; composante verte
+002B   00B5           00228     movwf ROUGE_PWMPR
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0030   0194           00219     clrf VERT_PWMDCH
+002C   00B6           00229     movwf ROUGE_PWMPR+1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0031   0193           00220     clrf VERT_PWMDCL
+002D   01BE           00230     clrf ROUGE_PWMCLKCON
+002E   30C0           00231     movlw (3<<OE);|(;|(1<<POL)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0032   0191           00221     clrf VERT_PWMPH
+002F   00BB           00232     movwf ROUGE_PWMCON
+                      00233 ; composante verte
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0033   0192           00222     clrf VERT_PWMPH+1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0034   019F           00223     clrf VERT_PWMLDCON
-0035   30FF           00224     movlw 255
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0036   0095           00225     movwf VERT_PWMPR
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0037   0096           00226     movwf VERT_PWMPR+1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0038   019E           00227     clrf VERT_PWMCLKCON
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  6
+0030   0194           00234     clrf VERT_PWMDCH
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0039   30C0           00228     movlw (3<<OE);|(;|(1<<POL)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003A   009B           00229     movwf VERT_PWMCON
-                      00230 ;  composante bleu
+0031   0193           00235     clrf VERT_PWMDCL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003B   01A4           00231     clrf BLEU_PWMDCH
+0032   0191           00236     clrf VERT_PWMPH
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003C   01A3           00232     clrf BLEU_PWMDCL
+0033   0192           00237     clrf VERT_PWMPH+1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003D   01A1           00233     clrf BLEU_PWMPH
+0034   019F           00238     clrf VERT_PWMLDCON
+0035   30FF           00239     movlw 255
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003E   01A2           00234     clrf BLEU_PWMPH+1
+0036   0095           00240     movwf VERT_PWMPR
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003F   01AF           00235     clrf BLEU_PWMLDCON
-0040   30FF           00236     movlw 255
+0037   0096           00241     movwf VERT_PWMPR+1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0041   00A5           00237     movwf BLEU_PWMPR
+0038   019E           00242     clrf VERT_PWMCLKCON
+0039   30C0           00243     movlw (3<<OE);|(;|(1<<POL)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0042   00A6           00238     movwf BLEU_PWMPR+1
+003A   009B           00244     movwf VERT_PWMCON
+                      00245 ;  composante bleu
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0043   01AE           00239     clrf BLEU_PWMCLKCON
-0044   30C0           00240     movlw (3<<OE);|(;|(1<<POL)
+003B   01A4           00246     clrf BLEU_PWMDCH
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0045   00AB           00241     movwf BLEU_PWMCON
-0046   0021           00242     banksel TRISA
-0047   30F8           00243     movlw ~((1<<ROUGE_PIN)|(1<<VERT_PIN)|(1<<BLEU_PIN))
+003C   01A3           00247     clrf BLEU_PWMDCL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+003D   01A1           00248     clrf BLEU_PWMPH
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+003E   01A2           00249     clrf BLEU_PWMPH+1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+003F   01AF           00250     clrf BLEU_PWMLDCON
+0040   30FF           00251     movlw 255
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0041   00A5           00252     movwf BLEU_PWMPR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0042   00A6           00253     movwf BLEU_PWMPR+1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0043   01AE           00254     clrf BLEU_PWMCLKCON
+0044   30C0           00255     movlw (3<<OE);|(;|(1<<POL)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0045   00AB           00256     movwf BLEU_PWMCON
+0046   0021           00257     banksel TRISA
+0047   30F8           00258     movlw ~((1<<ROUGE_PIN)|(1<<VERT_PIN)|(1<<BLEU_PIN))
 Message[305]: Using default destination of 1 (file).
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0048   058C           00244     andwf TRISA
-                      00245 ;met à zéro les couleurs
-0049   30??           00246     movlw rouge
-004A   0084           00247     movwf FSR0L
-004B   0185           00248     clrf FSR0H
-004C   3006           00249     movlw 6
-                      00250     pushw
+0048   058C           00259     andwf TRISA
+                      00260 ;met à zéro les couleurs
+0049   30??           00261     movlw rouge
+004A   0084           00262     movwf FSR0L
+004B   0185           00263     clrf FSR0H
+004C   3006           00264     movlw 6
+                      00265     pushw
 004D   001C               M     movwi ++FSR1
-004E   0103           00251     clrw
-004F   0881           00252     movf DPTOS,F
-0050   1903           00253     skpnz
-0051   3???           00254     bra $+4
-0052   001A           00255     movwi FSR0++
-Message[305]: Using default destination of 1 (file).
-0053   0381           00256     decf DPTOS
-0054   3???           00257     bra $-5
-                      00258     drop
-0055   317F               M     addfsr FSR1,-1
-                      00259 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00260 ; attend la reception d'un octet
-                      00261 ; les 7 octets doivent-être reçu et traité
-                      00262 ; en moins de 16 msec sinon le WDT réinitialise le MCU
-                      00263 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-0056                  00264 main:
-0056   2???           00265     call nouvelle_couleur
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  7
+004E   0103           00266     clrw
+004F   0881           00267     movf DPTOS,F
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0057   3007           00266     movlw 7 ; 7 octets par commande
-0058   00??           00267     movwf a_recevoir
-0059   30??           00268     movlw low rouge
-005A   0084           00269     movwf FSR0L
-005B   30??           00270     movlw high rouge
-005C   0085           00271     movwf FSR0H
-005D   0020           00272     banksel PIR1
-005E   0064           00273     clrwdt
-005F   1E91           00274     btfss PIR1,RCIF
-0060   3???           00275     bra $-2
-                      00276 ; reçu 1 octet doit-être le compteur
-0061   0023           00277     banksel RCREG
+0050   1903           00268     skpnz
+0051   3???           00269     bra $+4
+0052   001A           00270     movwi FSR0++
+Message[305]: Using default destination of 1 (file).
+0053   0381           00271     decf DPTOS
+0054   3???           00272     bra $-5
+                      00273     drop
+0055   317F               M     addfsr FSR1,-1
+                      00274 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00275 ; attend la reception d'un octet
+                      00276 ; les 7 octets doivent-être reçu et traité
+                      00277 ; en moins de 16 msec sinon le WDT réinitialise le MCU
+                      00278 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+0056                  00279 main:
+0056   2???           00280     call nouvelle_couleur
+0057   3007           00281     movlw 7 ; 7 octets par commande
+0058   00??           00282     movwf a_recevoir
+0059   30??           00283     movlw low rouge
+005A   0084           00284     movwf FSR0L
+005B   30??           00285     movlw high rouge
+005C   0085           00286     movwf FSR0H
+005D   0020           00287     banksel PIR1
+005E   0064           00288     clrwdt
+005F   1E91           00289     btfss PIR1,RCIF
+0060   3???           00290     bra $-2
+                      00291 ; reçu 1 octet doit-être le compteur
+0061   0023           00292     banksel RCREG
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0062   0819           00278     movfw RCREG
-                      00279     pushw
+0062   0819           00293     movfw RCREG
+                      00294     pushw
 0063   001C               M     movwi ++FSR1
-0064   1903           00280     skpnz
-0065   3???           00281     bra accepte
-0066   3AFF           00282     xorlw 255
-0067   1903           00283     skpnz
-0068   3???           00284     bra diffusion
-0069                  00285 retransmet: ; au suivant
+0064   1903           00295     skpnz
+0065   3???           00296     bra diffusion
+0066   3A01           00297     xorlw 1
+0067   1903           00298     skpnz
+0068   3???           00299     bra accepte
+0069                  00300 retransmet: ; au suivant
 Message[305]: Using default destination of 1 (file).
-0069   0381           00286     decf DPTOS   ; décrémente le compteur
-006A   2???           00287     call uart_tx ; et le retransmet
+0069   0381           00301     decf DPTOS   ; décrémente le compteur
+006A   2???           00302     call uart_tx ; et le retransmet
 Message[305]: Using default destination of 1 (file).
-006B   03??           00288     decf a_recevoir ; compteur retransmis
-006C                  00289 retrans_loop:    ; retransmet les 6 octets suivants
-006C   2???           00290     call uart_rx
-006D   2???           00291     call uart_tx
+006B   03??           00303     decf a_recevoir ; compteur retransmis
+006C                  00304 retrans_loop:    ; retransmet les 6 octets suivants
+006C   2???           00305     call uart_rx
+006D   2???           00306     call uart_tx
 Message[305]: Using default destination of 1 (file).
-006E   0B??           00292     decfsz a_recevoir
-006F   3???           00293     bra retrans_loop
-0070   3???           00294     bra main
-0071                  00295 accepte: ; compteur à zéro accepte la commande
-                      00296     drop
+006E   0B??           00307     decfsz a_recevoir
+006F   3???           00308     bra retrans_loop
+0070   3???           00309     bra main
+0071                  00310 accepte: ; compteur à zéro accepte la commande
+                      00311     drop
 0071   317F               M     addfsr FSR1,-1
 Message[305]: Using default destination of 1 (file).
-0072   03??           00297     decf a_recevoir
-0073                  00298 accept_loop:    
-0073   2???           00299     call uart_rx
-                      00300     popw
-0074   0017               M     moviw FSR1--
-0075   001A           00301     movwi FSR0++
-Message[305]: Using default destination of 1 (file).
-0076   0B??           00302     decfsz a_recevoir
-0077   3???           00303     bra accept_loop
-0078   3???           00304     bra main
-0079                  00305 diffusion: ; message accepté par tous
-0079   2???           00306     call uart_tx ; retransmet le compteur
-Message[305]: Using default destination of 1 (file).
-007A   03??           00307     decf a_recevoir
-007B                  00308 diffus_loop:    
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  8
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-007B   2???           00309     call uart_rx 
-                      00310     dup              ; garde une copie 
+0072   03??           00312     decf a_recevoir
+0073                  00313 accept_loop:    
+0073   2???           00314     call uart_rx
+                      00315     popw
+0074   0017               M     moviw FSR1--
+0075   001A           00316     movwi FSR0++
+Message[305]: Using default destination of 1 (file).
+0076   0B??           00317     decfsz a_recevoir
+0077   3???           00318     bra accept_loop
+0078   3???           00319     bra main
+0079                  00320 diffusion: ; message accepté par tous
+0079   2???           00321     call uart_tx ; retransmet le compteur
+Message[305]: Using default destination of 1 (file).
+007A   03??           00322     decf a_recevoir
+007B                  00323 diffus_loop:    
+007B   2???           00324     call uart_rx 
+                      00325     dup              ; garde une copie 
 007C   0801               M     movfw INDF1
 007D   001C               M     movwi ++FSR1
-007E   2???           00311     call uart_tx     ; et retransmet
-                      00312     popw
+007E   2???           00326     call uart_tx     ; et retransmet
+                      00327     popw
 007F   0017               M     moviw FSR1--
-0080   001A           00313     movwi FSR0++
+0080   001A           00328     movwi FSR0++
 Message[305]: Using default destination of 1 (file).
-0081   0B??           00314     decfsz a_recevoir
-0082   3???           00315     bra diffus_loop
-0083   3???           00316     bra main
-                      00317     
-                      00318 ; attend un octet du uart
-                      00319 ; l'octet reçu est empilé    
-0084                  00320 uart_rx:
-0084   0020           00321     banksel PIR1
-0085   1E91           00322     btfss PIR1,RCIF
-0086   3???           00323     bra $-1
-0087   0023           00324     banksel RCREG
+0081   0B??           00329     decfsz a_recevoir
+0082   3???           00330     bra diffus_loop
+0083   3???           00331     bra main
+                      00332     
+                      00333 ; attend un octet du uart
+                      00334 ; l'octet reçu est empilé    
+0084                  00335 uart_rx:
+0084   0020           00336     banksel PIR1
+0085   1E91           00337     btfss PIR1,RCIF
+0086   3???           00338     bra $-1
+0087   0023           00339     banksel RCREG
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0088   0819           00325     movfw RCREG
-                      00326     pushw
+0088   0819           00340     movfw RCREG
+                      00341     pushw
 0089   001C               M     movwi ++FSR1
-008A   0008           00327     return
-                      00328 
-                      00329 ; transmet un octet
-                      00330 ; octet à transmettre au sommet de la pile    
-008B                  00331 uart_tx:
-008B   0020           00332     banksel PIR1
-008C   1E11           00333     btfss PIR1,TXIF
-008D   3???           00334     bra $-1
-008E   0023           00335     banksel TXREG
-                      00336     popw
+008A   0008           00342     return
+                      00343 
+                      00344 ; transmet un octet
+                      00345 ; octet à transmettre au sommet de la pile    
+008B                  00346 uart_tx:
+008B   0020           00347     banksel PIR1
+008C   1E11           00348     btfss PIR1,TXIF
+008D   3???           00349     bra $-1
+008E   0023           00350     banksel TXREG
+                      00351     popw
 008F   0017               M     moviw FSR1--
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0090   009A           00337     movwf TXREG
-0091   0008           00338     return
-                      00339     
-0092                  00340 nouvelle_couleur:
-0092   003B           00341     banksel PWM_BANK
-0093   08??           00342     movfw rouge
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0094   00B4           00343     movwf ROUGE_PWMDCH
-0095   08??           00344     movfw rouge+1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0096   00B3           00345     movwf ROUGE_PWMDCL
-0097   08??           00346     movfw vert
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0098   0094           00347     movwf VERT_PWMDCH
-0099   08??           00348     movfw vert+1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-009A   0093           00349     movwf VERT_PWMDCL
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE  9
+0090   009A           00352     movwf TXREG
+0091   0008           00353     return
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-009B   08??           00350     movfw bleu
+                      00354     
+0092                  00355 nouvelle_couleur:
+0092   003B           00356     banksel PWM_BANK
+0093   08??           00357     movfw rouge
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-009C   00A4           00351     movwf BLEU_PWMDCH
-009D   08??           00352     movfw bleu+1
+0094   00B4           00358     movwf ROUGE_PWMDCH
+0095   08??           00359     movfw rouge+1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-009E   00A3           00353     movwf BLEU_PWMDCL
+0096   00B3           00360     movwf ROUGE_PWMDCL
+0097   08??           00361     movfw vert
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-009F   17BF           00354     bsf ROUGE_PWMLDCON,7
+0098   0094           00362     movwf VERT_PWMDCH
+0099   08??           00363     movfw vert+1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-00A0   179F           00355     bsf VERT_PWMLDCON,7
+009A   0093           00364     movwf VERT_PWMDCL
+009B   08??           00365     movfw bleu
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-00A1   17AF           00356     bsf BLEU_PWMLDCON,7
-00A2   0008           00357     return
-                      00358     
-39E4 1DFC             00359     end
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 10
+009C   00A4           00366     movwf BLEU_PWMDCH
+009D   08??           00367     movfw bleu+1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+009E   00A3           00368     movwf BLEU_PWMDCL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+009F   17BF           00369     bsf ROUGE_PWMLDCON,7
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00A0   179F           00370     bsf VERT_PWMLDCON,7
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00A1   17AF           00371     bsf BLEU_PWMLDCON,7
+00A2   0008           00372     return
+                      00373     
+39E4 1DFC             00374     end
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 10
 
 
 SYMBOL TABLE
@@ -499,6 +514,7 @@ SYMBOL TABLE
 
 ABDEN                             00000000
 ABDOVF                            00000007
+ACCEPTER                          1
 ADCON0                            0000009D
 ADCON1                            0000009E
 ADCON2                            0000009F
@@ -549,13 +565,13 @@ BSR                               00000008
 BSR0                              00000000
 BSR1                              00000001
 BSR2                              00000002
-BSR3                              00000003
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 11
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+BSR3                              00000003
 BSR4                              00000004
 BSR_SHAD                          00000FE6
 C                                 00000000
@@ -608,13 +624,13 @@ CWG1DBR3                          00000003
 CWG1DBR4                          00000004
 CWG1DBR5                          00000005
 CWGASEL                           00000006
-CWGBSEL                           00000005
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 12
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 12
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+CWGBSEL                           00000005
 C_SHAD                            00000000
 DACCON0                           00000118
 DACCON1                           00000119
@@ -632,6 +648,7 @@ DC                                00000001
 DCIE                              00000001
 DCIF                              00000001
 DC_SHAD                           00000001
+DIFFUSER                          0
 DPTOS                             INDF1
 EN                                00000007
 F                                 00000001
@@ -666,14 +683,14 @@ G1EN                              00000007
 G1IS0                             00000000
 G1IS1                             00000001
 G1IS2                             00000002
-G1OEA                             00000005
-G1OEB                             00000006
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 13
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 13
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+G1OEA                             00000005
+G1OEB                             00000006
 G1POLA                            00000003
 G1POLB                            00000004
 GIE                               00000007
@@ -725,14 +742,14 @@ IRCF3                             00000006
 LATA                              0000010C
 LATA0                             00000000
 LATA1                             00000001
-LATA2                             00000002
-LATA4                             00000004
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 14
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+LATA2                             00000002
+LATA4                             00000004
 LATA5                             00000005
 LDA                               00000007
 LDS0                              00000000
@@ -784,14 +801,14 @@ OSCSTAT                           0000009A
 OSCTUNE                           00000098
 OSTS                              00000005
 OUT                               00000005
-P1SEL                             00000000
-P2SEL                             00000001
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 15
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 15
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+P1SEL                             00000000
+P2SEL                             00000001
 PCL                               00000002
 PCLATH                            0000000A
 PCLATH_SHAD                       00000FE7
@@ -843,14 +860,14 @@ PWM1DCH1                          00000001
 PWM1DCH2                          00000002
 PWM1DCH3                          00000003
 PWM1DCH4                          00000004
-PWM1DCH5                          00000005
-PWM1DCH6                          00000006
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 16
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 16
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM1DCH5                          00000005
+PWM1DCH6                          00000006
 PWM1DCH7                          00000007
 PWM1DCIE                          00000001
 PWM1DCIF                          00000001
@@ -902,14 +919,14 @@ PWM1OFL4                          00000004
 PWM1OFL5                          00000005
 PWM1OFL6                          00000006
 PWM1OFL7                          00000007
-PWM1OFM0                          00000005
-PWM1OFM1                          00000006
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 17
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 17
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM1OFM0                          00000005
+PWM1OFM1                          00000006
 PWM1OFMC                          00000004
 PWM1OFS0                          00000000
 PWM1OFS1                          00000001
@@ -961,14 +978,14 @@ PWM1PRL7                          00000007
 PWM1PS0                           00000004
 PWM1PS1                           00000005
 PWM1PS2                           00000006
-PWM1TMR                           00000D99
-PWM1TMRH                          00000D9A
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 18
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 18
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM1TMR                           00000D99
+PWM1TMRH                          00000D9A
 PWM1TMRH0                         00000000
 PWM1TMRH1                         00000001
 PWM1TMRH2                         00000002
@@ -1020,14 +1037,14 @@ PWM2INTE                          00000DAC
 PWM2INTF                          00000DAD
 PWM2INTFLG                        00000DAD
 PWM2LD                            00000007
-PWM2LDA_A                         00000001
-PWM2LDCON                         00000DAF
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 19
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 19
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM2LDA_A                         00000001
+PWM2LDCON                         00000DAF
 PWM2LDM                           00000006
 PWM2LDS0                          00000000
 PWM2LDS1                          00000001
@@ -1079,14 +1096,14 @@ PWM2PHL                           00000DA1
 PWM2PHL0                          00000000
 PWM2PHL1                          00000001
 PWM2PHL2                          00000002
-PWM2PHL3                          00000003
-PWM2PHL4                          00000004
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 20
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 20
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM2PHL3                          00000003
+PWM2PHL4                          00000004
 PWM2PHL5                          00000005
 PWM2PHL6                          00000006
 PWM2PHL7                          00000007
@@ -1138,14 +1155,14 @@ PWM3CLKCON                        00000DBE
 PWM3CON                           00000DBB
 PWM3CS0                           00000000
 PWM3CS1                           00000001
-PWM3DC                            00000DB3
-PWM3DCH                           00000DB4
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 21
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 21
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM3DC                            00000DB3
+PWM3DCH                           00000DB4
 PWM3DCH0                          00000000
 PWM3DCH1                          00000001
 PWM3DCH2                          00000002
@@ -1197,14 +1214,14 @@ PWM3OFIE                          00000003
 PWM3OFIF                          00000003
 PWM3OFL                           00000DB7
 PWM3OFL0                          00000000
-PWM3OFL1                          00000001
-PWM3OFL2                          00000002
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 22
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 22
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM3OFL1                          00000001
+PWM3OFL2                          00000002
 PWM3OFL3                          00000003
 PWM3OFL4                          00000004
 PWM3OFL5                          00000005
@@ -1256,14 +1273,14 @@ PWM3PRL0                          00000000
 PWM3PRL1                          00000001
 PWM3PRL2                          00000002
 PWM3PRL3                          00000003
-PWM3PRL4                          00000004
-PWM3PRL5                          00000005
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 23
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 23
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PWM3PRL4                          00000004
+PWM3PRL5                          00000005
 PWM3PRL6                          00000006
 PWM3PRL7                          00000007
 PWM3PS0                           00000004
@@ -1315,14 +1332,14 @@ ROUGE_PWMLDCON                    PWM3LDCON
 ROUGE_PWMOF                       PWM3OF
 ROUGE_PWMOFCON                    PWM3OFCON
 ROUGE_PWMPH                       PWM3PH
-ROUGE_PWMPR                       PWM3PR
-ROUGE_PWMTMR                      PWM3TMR
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 24
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 24
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+ROUGE_PWMPR                       PWM3PR
+ROUGE_PWMTMR                      PWM3TMR
 RX                                RA5
 RX9                               00000006
 RX9D                              00000000
@@ -1374,14 +1391,14 @@ T2CON                             0000001C
 T2OUTPS0                          00000003
 T2OUTPS1                          00000004
 T2OUTPS2                          00000005
-T2OUTPS3                          00000006
-TMR0                              00000015
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 25
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 25
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+T2OUTPS3                          00000006
+TMR0                              00000015
 TMR0CS                            00000005
 TMR0IE                            00000005
 TMR0IF                            00000002
@@ -1433,14 +1450,14 @@ TXIE                              00000004
 TXIF                              00000004
 TXREG                             0000019A
 TXSTA                             0000019E
-VERROUGE_T_PWMPR                  PWM1PR
-VERTROUGE__PWMOF                  PWM1OF
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 26
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 26
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+VERROUGE_T_PWMPR                  PWM1PR
+VERTROUGE__PWMOF                  PWM1OF
 VERT_PIN                          RA1
 VERT_PWMCLKCON                    PWM1CLKCON
 VERT_PWMCON                       PWM1CON
@@ -1492,14 +1509,14 @@ _BORV_LO                          00003FFF
 _CLKOUTEN_OFF                     00003FFF
 _CLKOUTEN_ON                      000037FF
 _CONFIG1                          00008007
-_CONFIG2                          00008008
-_CP_OFF                           00003FFF
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 27
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 27
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+_CONFIG2                          00008008
+_CP_OFF                           00003FFF
 _CP_ON                            00003F7F
 _DEVID1                           00008006
 _FOSC_ECH                         00003FFF
@@ -1551,14 +1568,14 @@ retrans_loop                      0000006C
 retransmet                        00000069
 rouge                             00000072
 rst                               00000000
-stack                             00000000
-uart_rx                           00000084
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-27-2016  20:54:51         PAGE 28
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 28
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+stack                             00000000
+uart_rx                           00000084
 uart_tx                           0000008B
 vert                              00000074
 

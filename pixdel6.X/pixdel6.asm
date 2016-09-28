@@ -33,11 +33,15 @@
 ;  soit nécessaire d'envoyer une commande à chaque LED qui la précède.
 ;  L'idée est basée sur un compteur décrémenté. Chaque paquet de données envoyé
 ;  dans la chaîne débute par un compteur. Une LED accepte le paquet si le compteur
-;  est à zéro sinon il décrémente le compteur et le transmet avec le reste du paquet
+;  est à 0 ou 1 sinon il décrémente le compteur et le transmet avec le reste du paquet
 ;  à la LED suivante. C'est donc la valeur initiale du compteur ainsi que la position 
-;  dans la chaîne qui détermine quel LED accepte le paquet.  Ce protocole permet
+;  dans la chaîne qui détermine quelle LED accepte le paquet.  Ce protocole permet
 ;  donc de réduire la quantité d'information qu'il est nécessaire d'envoyer dans la chaîne.
-;
+;  
+;  Si la valeur du compteur à est zéro il s'agit un message de diffusion dans ce cas
+;  Le pixdel reconnait la commande mais la retransmet aussi sans décrémenter le compteur.
+;  ce protocole peut donc contrôler une chaîne de 255 pixdel.    
+;    
 ;   Le PIC12F1572 possède 3 canaux PWM 16 bits et un périphérique EUSART.
 ;   Le EUSART est utilisé pour la communication et les 3 PWM pour le contrôle des
 ;   composantes RGB de la LED. Le paquet transmis est donc constitué de 7 octets
@@ -50,6 +54,14 @@
 ;   Puisque le paquet est de taille fixe et qu'en plus le compteur détermine la cible,
 ;   il n'est pas nécessaire de faire une pose entre chaque commande comme c'est le cas
 ;   pour les WS8212b.
+;==============================================================================    
+;| valeur du compteur  |   action                                              |
+;==============================================================================    
+;|          0          |  diffusion: accepte le message et transmet au suivant |
+;|          1          |  accepte le message mais ne transmet pas au suivant   |
+;|        2-255        |  refuse le message, décrémente le compteur et         |
+;|                     |  retransmet au suivant.                               |
+;==============================================================================    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
     
     include p12f1572.inc
@@ -107,6 +119,9 @@
 #define BAUD 115200 ;  57600, 38400
 
 #define DPTOS  INDF1  ; sommet de la pile des arguments
+
+#define DIFFUSER  0   ; message de diffusion
+#define ACCEPTER  1   ; message accepté
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;   macros
@@ -278,10 +293,10 @@ main:
     movfw RCREG
     pushw
     skpnz
-    bra accepte
-    xorlw 255
-    skpnz
     bra diffusion
+    xorlw 1
+    skpnz
+    bra accepte
 retransmet: ; au suivant
     decf DPTOS   ; décrémente le compteur
     call uart_tx ; et le retransmet

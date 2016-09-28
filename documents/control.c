@@ -99,7 +99,7 @@ int main()
 		tcdrain(fd);    /* delay for output */
         puts("command sent.\n");
 
-		/* simple noncanonical input */
+		/* 
 		unsigned char buf[7];
 		int rdlen;
 		if (cmd[0]>0){
@@ -110,6 +110,6 @@ int main()
 					printf(" 0x%x", *p);
 				printf("\n");
 			}
-		}
+		} */
 	}//while(1)
 }
