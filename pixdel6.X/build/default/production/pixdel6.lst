@@ -1,4 +1,4 @@
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  1
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -57,7 +57,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00051 ;   ------------------      
                       00052 ;   COMPTEUR|Rh|Rl|Gh|Gl|Bh|Bl    
                       00053 ;   >>>> COMPTEUR=255 pour message de diffusion <<<<
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  2
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -87,7 +87,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00008 ;==========================================================================
                       00009 
                       01601         LIST
-8007   39E4           00068     __config _CONFIG1, _FOSC_INTOSC&_WDTE_OFF&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
+8007   39FC           00068     __config _CONFIG1, _FOSC_INTOSC&_WDTE_ON&_PWRTE_OFF&_MCLRE_ON&_CP_OFF&_BOREN_OFF&_CLKOUTEN_OFF
 8008   1DFC           00069     __config _CONFIG2, _WRT_ALL&_PLLEN_ON&_STVREN_OFF&_LVP_OFF
                       00070 
                       00071     radix dec
@@ -116,7 +116,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00094 #define VERTROUGE__PWMOF PWM1OF ; offset
                       00095 #define VERT_PWMTMR PWM1TMR ; timer
                       00096 #define VERT_PWMCON PWM1CON ; registre de contrôle
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  3
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -175,7 +175,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00147 case macro valeur, cible
                       00148     xorlw valeur
                       00149     skpnz
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  4
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -234,7 +234,7 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
 0012   30A0           00195     movlw (1<<GIE)|(1<<TMR0IE)
 0013   008B           00196     movwf INTCON
                       00197 ;initialisation pointeur de pile
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  5
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -293,7 +293,7 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
                       00233 ; composante verte
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
 0030   0194           00234     clrf VERT_PWMDCH
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  6
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -352,7 +352,7 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
 004D   001C               M     movwi ++FSR1
 004E   0103           00266     clrw
 004F   0881           00267     movf DPTOS,F
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  7
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -411,7 +411,7 @@ Message[305]: Using default destination of 1 (file).
                       00311     drop
 0071   317F               M     addfsr FSR1,-1
 Message[305]: Using default destination of 1 (file).
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  8
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -470,7 +470,7 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
 0090   009A           00352     movwf TXREG
 0091   0008           00353     return
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE  9
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -505,8 +505,8 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
 00A1   17AF           00371     bsf BLEU_PWMLDCON,7
 00A2   0008           00372     return
                       00373     
-39E4 1DFC             00374     end
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 10
+39FC 1DFC             00374     end
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 10
 
 
 SYMBOL TABLE
@@ -565,7 +565,7 @@ BSR                               00000008
 BSR0                              00000000
 BSR1                              00000001
 BSR2                              00000002
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 11
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 11
 
 
 SYMBOL TABLE
@@ -624,7 +624,7 @@ CWG1DBR3                          00000003
 CWG1DBR4                          00000004
 CWG1DBR5                          00000005
 CWGASEL                           00000006
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 12
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 12
 
 
 SYMBOL TABLE
@@ -683,7 +683,7 @@ G1EN                              00000007
 G1IS0                             00000000
 G1IS1                             00000001
 G1IS2                             00000002
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 13
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 13
 
 
 SYMBOL TABLE
@@ -742,7 +742,7 @@ IRCF3                             00000006
 LATA                              0000010C
 LATA0                             00000000
 LATA1                             00000001
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 14
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 14
 
 
 SYMBOL TABLE
@@ -801,7 +801,7 @@ OSCSTAT                           0000009A
 OSCTUNE                           00000098
 OSTS                              00000005
 OUT                               00000005
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 15
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 15
 
 
 SYMBOL TABLE
@@ -860,7 +860,7 @@ PWM1DCH1                          00000001
 PWM1DCH2                          00000002
 PWM1DCH3                          00000003
 PWM1DCH4                          00000004
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 16
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 16
 
 
 SYMBOL TABLE
@@ -919,7 +919,7 @@ PWM1OFL4                          00000004
 PWM1OFL5                          00000005
 PWM1OFL6                          00000006
 PWM1OFL7                          00000007
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 17
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 17
 
 
 SYMBOL TABLE
@@ -978,7 +978,7 @@ PWM1PRL7                          00000007
 PWM1PS0                           00000004
 PWM1PS1                           00000005
 PWM1PS2                           00000006
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 18
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 18
 
 
 SYMBOL TABLE
@@ -1037,7 +1037,7 @@ PWM2INTE                          00000DAC
 PWM2INTF                          00000DAD
 PWM2INTFLG                        00000DAD
 PWM2LD                            00000007
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 19
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 19
 
 
 SYMBOL TABLE
@@ -1096,7 +1096,7 @@ PWM2PHL                           00000DA1
 PWM2PHL0                          00000000
 PWM2PHL1                          00000001
 PWM2PHL2                          00000002
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 20
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 20
 
 
 SYMBOL TABLE
@@ -1155,7 +1155,7 @@ PWM3CLKCON                        00000DBE
 PWM3CON                           00000DBB
 PWM3CS0                           00000000
 PWM3CS1                           00000001
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 21
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 21
 
 
 SYMBOL TABLE
@@ -1214,7 +1214,7 @@ PWM3OFIE                          00000003
 PWM3OFIF                          00000003
 PWM3OFL                           00000DB7
 PWM3OFL0                          00000000
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 22
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 22
 
 
 SYMBOL TABLE
@@ -1273,7 +1273,7 @@ PWM3PRL0                          00000000
 PWM3PRL1                          00000001
 PWM3PRL2                          00000002
 PWM3PRL3                          00000003
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 23
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 23
 
 
 SYMBOL TABLE
@@ -1332,7 +1332,7 @@ ROUGE_PWMLDCON                    PWM3LDCON
 ROUGE_PWMOF                       PWM3OF
 ROUGE_PWMOFCON                    PWM3OFCON
 ROUGE_PWMPH                       PWM3PH
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 24
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 24
 
 
 SYMBOL TABLE
@@ -1391,7 +1391,7 @@ T2CON                             0000001C
 T2OUTPS0                          00000003
 T2OUTPS1                          00000004
 T2OUTPS2                          00000005
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 25
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 25
 
 
 SYMBOL TABLE
@@ -1450,7 +1450,7 @@ TXIE                              00000004
 TXIF                              00000004
 TXREG                             0000019A
 TXSTA                             0000019E
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 26
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 26
 
 
 SYMBOL TABLE
@@ -1509,7 +1509,7 @@ _BORV_LO                          00003FFF
 _CLKOUTEN_OFF                     00003FFF
 _CLKOUTEN_ON                      000037FF
 _CONFIG1                          00008007
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 27
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 27
 
 
 SYMBOL TABLE
@@ -1568,7 +1568,7 @@ retrans_loop                      0000006C
 retransmet                        00000069
 rouge                             00000072
 rst                               00000000
-MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  10:05:00         PAGE 28
+MPASM 5.68  /HOME/JACQUES/GITHUB/PIXDEL6/PIX   9-28-2016  17:02:49         PAGE 28
 
 
 SYMBOL TABLE
