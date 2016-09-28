@@ -28,7 +28,7 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
-LIBS:librairie-personnelle
+LIBS:pixdel6-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
@@ -88,43 +88,10 @@ F 3 "" H 6700 3200 50  0000 C CNN
 $EndComp
 Wire Wire Line
 	6500 3200 6700 3200
-$Comp
-L R R4
-U 1 1 57E14FBE
-P 6900 3650
-F 0 "R4" V 6980 3650 50  0000 C CNN
-F 1 "150" V 6900 3650 50  0000 C CNN
-F 2 "" V 6830 3650 50  0000 C CNN
-F 3 "" H 6900 3650 50  0000 C CNN
-	1    6900 3650
-	1    0    0    -1  
-$EndComp
-$Comp
-L R R3
-U 1 1 57E14FEC
-P 6700 3650
-F 0 "R3" V 6780 3650 50  0000 C CNN
-F 1 "180" V 6700 3650 50  0000 C CNN
-F 2 "" V 6630 3650 50  0000 C CNN
-F 3 "" H 6700 3650 50  0000 C CNN
-	1    6700 3650
-	1    0    0    -1  
-$EndComp
-$Comp
-L R R5
-U 1 1 57E15054
-P 7100 3650
-F 0 "R5" V 7180 3650 50  0000 C CNN
-F 1 "67" V 7100 3650 50  0000 C CNN
-F 2 "" V 7030 3650 50  0000 C CNN
-F 3 "" H 7100 3650 50  0000 C CNN
-	1    7100 3650
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	6500 3500 6700 3500
 Wire Wire Line
-	6900 3500 6900 3400
+	6900 3400 6900 3950
 Wire Wire Line
 	6900 3400 6500 3400
 $Comp
@@ -141,13 +108,9 @@ $EndComp
 Wire Wire Line
 	6500 3300 7100 3300
 Wire Wire Line
-	7100 3300 7100 3500
+	7100 3300 7100 3950
 Wire Wire Line
-	6700 3800 6700 3950
-Wire Wire Line
-	6900 3800 6900 3950
-Wire Wire Line
-	7100 3800 7100 3950
+	6700 3500 6700 3950
 $Comp
 L GND #PWR6
 U 1 1 57E1527B
@@ -158,17 +121,6 @@ F 2 "" H 6900 4550 50  0000 C CNN
 F 3 "" H 6900 4550 50  0000 C CNN
 	1    6900 4550
 	1    0    0    -1  
-$EndComp
-$Comp
-L R R2
-U 1 1 57E152A8
-P 5300 3500
-F 0 "R2" V 5380 3500 50  0000 C CNN
-F 1 "470" V 5300 3500 50  0000 C CNN
-F 2 "" V 5230 3500 50  0000 C CNN
-F 3 "" H 5300 3500 50  0000 C CNN
-	1    5300 3500
-	0    1    1    0   
 $EndComp
 $Comp
 L R R1
@@ -206,9 +158,7 @@ $EndComp
 Wire Wire Line
 	4950 3500 4950 3700
 Wire Wire Line
-	5150 3500 4950 3500
-Wire Wire Line
-	5450 3500 5650 3500
+	4950 3500 5650 3500
 Wire Wire Line
 	4950 3200 4950 2950
 Connection ~ 5650 2950
@@ -293,38 +243,10 @@ F 3 "" H 4700 3250 50  0000 C CNN
 $EndComp
 Text Label 6700 3500 0    60   ~ 0
 red
-Text Label 6850 3400 0    60   ~ 0
-green
 Text Label 7100 3300 0    60   ~ 0
+green
+Text Label 6900 3400 0    60   ~ 0
 blue
-$Comp
-L CONN_M6 P1
-U 1 1 57E1653B
-P 3950 4500
-F 0 "P1" H 3975 4100 50  0000 C CNN
-F 1 "ICSP" H 3975 4800 50  0000 C CNN
-F 2 "" H 3950 4500 60  0001 C CNN
-F 3 "" H 3950 4500 60  0001 C CNN
-	1    3950 4500
-	1    0    0    -1  
-$EndComp
-Text Label 4200 4300 0    50   ~ 0
-Vpp
-Text Label 4200 4400 0    50   ~ 0
-Vdd
-Text Label 4200 4500 0    50   ~ 0
-Vss
-Text Label 4200 4700 0    50   ~ 0
-PGCLK
-Text Label 4200 4600 0    50   ~ 0
-PGDAT
-NoConn ~ 4200 4800
-Text Label 5650 3500 2    50   ~ 0
-Vpp
-Text Label 6500 3300 0    50   ~ 0
-PGDAT
-Text Label 6500 3400 0    50   ~ 0
-PGCLK
 Text Label 5650 3200 2    50   ~ 0
 Vdd
 Text Label 6500 3200 0    50   ~ 0
